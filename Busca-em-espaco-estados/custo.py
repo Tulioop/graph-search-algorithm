@@ -1,26 +1,17 @@
+import heapq
 import random
+from befirst import calcular_vizinho
 
-def custo(labirinto):
+def busca_custo_minimo(labirinto):
     inicio = (labirinto.rows, labirinto.cols)
-    fronteira=[]
-    nosVisitados=[]
-    fronteira.append(inicio)
-    aStarPath={}
+    fronteira = []
+    nosVisitados = set()
+    heapq.heappush(fronteira, (0, inicio))
+    custoMinimoPath = {}
 
-    # Função heurística (distância em linha reta até o objetivo)
-    # def heuristic(cell):
-    #     goal = labirinto._goal
-    #     return abs(cell[0] - goal[0]) + abs(cell[1] - goal[1])
-
-    # Custo acumulado (distância percorrida desde o início)
-    def cost(cell):
-        return len(aStarPath)
-
-    while fronteira != []:
-        # Ordenar a fronteira pelo custo acumulado para garantir que o caminho mais promissor seja explorado primeiro
-        fronteira.sort(key=lambda x: cost(x))
-        vertice = fronteira.pop(0)
-        nosVisitados.append(vertice)
+    while fronteira:
+        custo, vertice = heapq.heappop(fronteira)
+        nosVisitados.add(vertice)
 
         if vertice == labirinto._goal:
             print("Objetivo encontrado")
@@ -30,23 +21,17 @@ def custo(labirinto):
         random.shuffle(movimentos)
 
         for d in movimentos:
-            if labirinto.maze_map[vertice][d] == True:
-                if d == 'E':
-                    vizinho = (vertice[0], vertice[1] + 1)
-                if d == 'W':
-                    vizinho = (vertice[0], vertice[1] - 1)
-                if d == 'N':
-                    vizinho = (vertice[0] - 1, vertice[1])
-                if d == 'S':
-                    vizinho = (vertice[0] + 1, vertice[1])
-
-                if vizinho not in nosVisitados and vizinho not in fronteira:
-                    fronteira.append(vizinho)
-                    aStarPath[vizinho] = vertice
+            if labirinto.maze_map[vertice][d]:
+                vizinho = calcular_vizinho(vertice, d)
+                if vizinho not in nosVisitados:
+                    novo_custo = custo + 1
+                    heapq.heappush(fronteira, (novo_custo, vizinho))
+                    custoMinimoPath[vizinho] = vertice
 
     fwdPath = {}
     cell = labirinto._goal
     while cell != inicio:
-        fwdPath[aStarPath[cell]] = cell
-        cell = aStarPath[cell]
+        fwdPath[custoMinimoPath[cell]] = cell
+        cell = custoMinimoPath[cell]
+
     return fwdPath
